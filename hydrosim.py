@@ -330,6 +330,11 @@ class SymulacjaKaskady(QWidget):
         self.oproznijZ4.setStyleSheet("background-color: #444; color: white;")
         self.oproznijZ4.clicked.connect(lambda: self.oproznij_zbiornik(self.z4))
 
+        self.przycisk_reset = QPushButton("Reset", self)
+        self.przycisk_reset.setGeometry(625, 260, 200, 30)
+        self.przycisk_reset.setStyleSheet("background-color: red; color: #444;")
+        self.przycisk_reset.clicked.connect(self.reset)
+
         self.running = False
         self.flow_speed = 0.8
 
@@ -368,7 +373,7 @@ class SymulacjaKaskady(QWidget):
         plynie_3_2 = False
         if self.z3.aktualna_ilosc > 30.0 and not self.z4.czy_pelny():
             if self.pompa.stan_pompy:
-                ilosc = self.z3.usun_ciecz(self.flow_speed - 0.2) # Pompa dziala wolniej
+                ilosc = self.z3.usun_ciecz(self.flow_speed)
                 self.z4.dodaj_ciecz(ilosc)
                 plynie_3_2 = True
             plynie_3_1 = True
@@ -404,6 +409,24 @@ class SymulacjaKaskady(QWidget):
     def oproznij_zbiornik(self, zb):
         zb.oproznij()
         self.update()
+
+    def reset(self):
+        if self.running: 
+            self.timer.stop()
+            self.btn.setStyleSheet("background-color: red; color: black;")
+        self.napelnij_zbiornik(self.z1)
+        self.oproznij_zbiornik(self.z2)
+        self.oproznij_zbiornik(self.z3)
+        self.oproznij_zbiornik(self.z4)
+        if self.zawor.stan_zaworu: 
+            self.zmien_stan_zaworu()
+        if self.pompa.stan_pompy: 
+            self.zmien_stan_pompy()
+        self.rura1_1.ustaw_przeplyw(False)
+        self.rura1_2.ustaw_przeplyw(False)
+        self.rura2.ustaw_przeplyw(False)
+        self.rura3_1.ustaw_przeplyw(False)
+        self.rura3_2.ustaw_przeplyw(False)
 
     def paintEvent(self, event,):
         p = QPainter(self)
