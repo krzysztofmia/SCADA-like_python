@@ -1,7 +1,8 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout
 from PyQt5.QtCore import Qt, QTimer, QPointF
 from PyQt5.QtGui import QPainter, QColor, QPen, QPainterPath, QBrush, QFont
+from PyQt5.QtChart import QChart, QChartView, QLineSeries, QValueAxis
 
 # --- Klasa Rura ---
 
@@ -201,7 +202,13 @@ class SymulacjaKaskady(QWidget):
         self.setFixedSize(900, 600)
         self.setStyleSheet("background-color: #222;")
 
-        # --- Konfiguracja Zbiornikow(schodkowo) ---
+        # Ustawienie okna na srodku ekranu
+        screen = QApplication.primaryScreen().geometry()
+        x = (screen.width() - self.width()) // 2
+        y = (screen.height() - self.height()) // 2
+        self.move(x, y)
+
+        # --- Konfiguracja Zbiornikow ---
         self.z1 = Zbiornik(50, 50, nazwa = "Zbiornik 1")
         self.z1.aktualna_ilosc = 100.0; self.z1.aktualizuj_poziom() # Pelny
         self.z2 = Zbiornik(350, 200, nazwa = "Zbiornik 2")
@@ -209,6 +216,11 @@ class SymulacjaKaskady(QWidget):
         self.z4 = Zbiornik(50, 350, nazwa = "Zbiornik 4")
         self.zbiorniki = [self.z1, self.z2, self.z3, self.z4]
         
+        # Wykres:
+        self.wykres = OknoWykresu(self.zbiorniki)
+        # Ustawienie okna wykresy obok okna glownego symulacji
+        self.wykres.move(self.x() + self.width() + 10, self.y())
+
         # Zawor:
         self.zawor = Zawor(250, 195, "Zawor 1")
         self.zawory = [self.zawor]
@@ -216,7 +228,7 @@ class SymulacjaKaskady(QWidget):
         # Pompa:
         self.pompa = Pompa(400, 450, "Pompa 1")
         self.pompy = [self.pompa]
-
+        
         # --- Konfiguracja Rur ---
         # Rura 1: Z1(Dol) -> Zawor(Lewo) -> Zawor(Prawo) -> Z2(Gora)
         p_start = self.z1.punkt_dol_srodek()
@@ -342,9 +354,12 @@ class SymulacjaKaskady(QWidget):
         if self.running: 
             self.timer.stop()
             self.btn.setStyleSheet("background-color: red; color: black;")
+            self.wykres.zatrzymaj_wykres()
         else: 
             self.timer.start(20)
             self.btn.setStyleSheet("background-color: green; color: white;")
+            self.wykres.pokaz_wykres()
+            self.wykres.wznow_wykres()
         self.running = not self.running
 
     def logika_przeplywu(self):
@@ -414,6 +429,7 @@ class SymulacjaKaskady(QWidget):
         if self.running: 
             self.timer.stop()
             self.btn.setStyleSheet("background-color: red; color: black;")
+            self.running = not self.running
         self.napelnij_zbiornik(self.z1)
         self.oproznij_zbiornik(self.z2)
         self.oproznij_zbiornik(self.z3)
@@ -427,6 +443,7 @@ class SymulacjaKaskady(QWidget):
         self.rura2.ustaw_przeplyw(False)
         self.rura3_1.ustaw_przeplyw(False)
         self.rura3_2.ustaw_przeplyw(False)
+        self.wykres.resetuj_wykres()
 
     def paintEvent(self, event,):
         p = QPainter(self)
@@ -442,8 +459,102 @@ class SymulacjaKaskady(QWidget):
         p.setFont(font)
         p.drawText(622, 40, "PANEL STEROWANIA")
 
+# --- Klasa OknoWykresu --- 
+
+class OknoWykresu(QWidget):
+    def __init__(self, zbiorniki):
+        super().__init__()
+        self.MAX_POINTS = 100
+        self.setWindowTitle("Wykres poziomow")
+        self.resize(500, 350)
+        self.move(500, 0)
+        self.setStyleSheet("background-color: #222;")
+
+        self.zbiorniki = zbiorniki
+        self.t = 0
+
+        self.chart = QChart()
+        self.chart.legend().setVisible(True)
+
+        self.series = {}
+        for z in zbiorniki:
+            s = QLineSeries()
+            s.setName(z.nazwa)
+            self.chart.addSeries(s)
+            self.series[z] = s
+
+        self.axisX = QValueAxis()
+        self.axisX.setRange(0, self.MAX_POINTS)
+        self.axisX.setTickCount(6)
+        self.axisX.setLabelFormat("%d")
+        
+        self.axisY = QValueAxis()
+        self.axisY.setRange(0, 100)
+
+        self.chart.addAxis(self.axisX, Qt.AlignBottom)
+        self.chart.addAxis(self.axisY, Qt.AlignLeft)
+
+        for s in self.series.values():
+            s.attachAxis(self.axisX)
+            s.attachAxis(self.axisY)
+
+        self.view = QChartView(self.chart)
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.view)
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_plot)
+        self.timer.stop()
+
+        # Tło wykresu
+        self.chart.setBackgroundBrush(QBrush(QColor("#222")))
+
+        # Oś X
+        self.axisX.setLinePenColor(Qt.white)       # linia osi
+        self.axisX.setLabelsBrush(Qt.white)        # etykiety osi (liczby)
+        self.axisX.setGridLineVisible(False)      # jeśli chcesz ukryć grid X
+
+        # Oś Y
+        self.axisY.setLinePenColor(Qt.white)       # linia osi
+        self.axisY.setLabelsBrush(Qt.white)        # etykiety osi
+        self.axisY.setGridLineVisible(False)      # jeśli chcesz ukryć grid Y
+
+        # Legenda (opcjonalnie)
+        self.chart.legend().setLabelColor(Qt.white)
+
+
+    def update_plot(self):
+        self.t += 1
+        for z in self.zbiorniki:
+            s = self.series[z]
+            s.append(self.t, z.aktualna_ilosc)
+
+            # czyścimy stare punkty (bufor)
+            if s.count() > self.MAX_POINTS * 2:
+                s.removePoints(0, s.count() - self.MAX_POINTS * 2)
+        if s.count() > self.MAX_POINTS:
+            self.axisX.setRange(
+                self.t - self.MAX_POINTS,
+                self.t
+            )
+    
+    def resetuj_wykres(self):
+        self.t = 0
+        for s in self.series.values():
+            s.clear()
+        self.zatrzymaj_wykres()
+
+    def wznow_wykres(self):
+        self.timer.start(200)
+
+    def zatrzymaj_wykres(self):
+        self.timer.stop()
+
+    def pokaz_wykres(self):
+        self.show()
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    okno = SymulacjaKaskady()
-    okno.show()
+    okno_symulacji = SymulacjaKaskady()
+    okno_symulacji.show()
     sys.exit(app.exec_())
