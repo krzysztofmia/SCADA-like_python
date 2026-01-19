@@ -108,7 +108,7 @@ class Zawor:
     def __init__(self, x, y, nazwa = " "):
         self.x = x; self.y = y
         self.nazwa = nazwa
-        self.stan_zaworu = False
+        self.stan_zaworu = False # False - wylaczony
         
     def aktualizuj_stan_zaworu(self):
         self.stan_zaworu = not self.stan_zaworu
@@ -151,15 +151,13 @@ class Zawor:
         painter.drawText(int(self.x - 50), int(self.y + 40), self.nazwa)
         painter.drawText(int(self.x), int(self.y + 40), "OTWARTY" if self.stan_zaworu else "ZAMKNIETY")
         
-        # --- Klasa Zawor ---
-
 # --- Klasa Pompa ---
 
 class Pompa:
     def __init__(self, x, y, nazwa = " "):
         self.x = x; self.y = y
         self.nazwa = nazwa
-        self.stan_pompy = False
+        self.stan_pompy = False # False - wylaczona
         
     def aktualizuj_stan_pompy(self):
         self.stan_pompy = not self.stan_pompy
@@ -216,16 +214,16 @@ class SymulacjaKaskady(QWidget):
         self.z4 = Zbiornik(50, 350, nazwa = "Zbiornik 4")
         self.zbiorniki = [self.z1, self.z2, self.z3, self.z4]
         
-        # Wykres:
+        # --- Wykres ---
         self.wykres = OknoWykresu(self.zbiorniki)
         # Ustawienie okna wykresy obok okna glownego symulacji
         self.wykres.move(self.x() + self.width() + 10, self.y())
 
-        # Zawor:
+        # --- Zawor ---
         self.zawor = Zawor(250, 195, "Zawor 1")
         self.zawory = [self.zawor]
 
-        # Pompa:
+        # --- Pompa ---
         self.pompa = Pompa(400, 450, "Pompa 1")
         self.pompy = [self.pompa]
         
@@ -277,71 +275,86 @@ class SymulacjaKaskady(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.logika_przeplywu)
 
+        # --- Przyciski ---
+        # Przycisk uruchamiania/zatrzymywania symulacji
         self.btn = QPushButton("Start/Stop", self)
         self.btn.setGeometry(625, 50, 200, 30)
         self.btn.setStyleSheet("background-color: red; color: #444;")
         self.btn.clicked.connect(self.przelacz_symulacje)
 
+        # Przycisk wlaczania/wylaczania zaworu pod zaworem
         self.stanZaworu = QPushButton("ON / OFF", self)
         self.stanZaworu.setGeometry(self.zawor.x - 50, self.zawor.y + 50, 100, 30)
         self.stanZaworu.setStyleSheet("background-color: red; color: #444;")
         self.stanZaworu.clicked.connect(self.zmien_stan_zaworu)
 
+        # Przycisk wlaczania/wylaczania zaworu na panelu sterowania
         self.stanZaworu2 = QPushButton("Zawor 1", self)
         self.stanZaworu2.setGeometry(625, 225, 100, 30)
         self.stanZaworu2.setStyleSheet("background-color: red; color: #444;")
         self.stanZaworu2.clicked.connect(self.zmien_stan_zaworu)
 
+        # Przycisk wlaczania/wylaczania pompy pod pompa
         self.stanPompy = QPushButton("ON / OFF", self)
         self.stanPompy.setGeometry(self.pompa.x - 50, self.pompa.y + 50, 100, 30)
         self.stanPompy.setStyleSheet("background-color: red; color: #444;")
         self.stanPompy.clicked.connect(self.zmien_stan_pompy)
 
+        # Przycisk wlaczania/wylaczania pompy na panelu sterowania
         self.stanPompy2 = QPushButton("Pompa 1", self)
         self.stanPompy2.setGeometry(725, 225, 100, 30)
         self.stanPompy2.setStyleSheet("background-color: red; color: #444;")
         self.stanPompy2.clicked.connect(self.zmien_stan_pompy)
 
+        # Przycisk napelniania zbiornika z1
         self.napelnijZ1 = QPushButton("Napelnij Z1", self)
         self.napelnijZ1.setGeometry(625, 85, 100, 30)
         self.napelnijZ1.setStyleSheet("background-color: #444; color: white;")
         self.napelnijZ1.clicked.connect(lambda: self.napelnij_zbiornik(self.z1))
 
+        # Przycisk oprozniania zbiornika z1
         self.oproznijZ1 = QPushButton("Oproznij Z1", self)
         self.oproznijZ1.setGeometry(725, 85, 100, 30)
         self.oproznijZ1.setStyleSheet("background-color: #444; color: white;")
         self.oproznijZ1.clicked.connect(lambda: self.oproznij_zbiornik(self.z1))
 
+        # Przycisk napelniania zbiornika z2
         self.napelnijZ2 = QPushButton("Napelnij Z2", self)
         self.napelnijZ2.setGeometry(625, 120, 100, 30)
         self.napelnijZ2.setStyleSheet("background-color: #444; color: white;")
         self.napelnijZ2.clicked.connect(lambda: self.napelnij_zbiornik(self.z2))
 
+        # Przycisk oprozniania zbiornika z2
         self.oproznijZ2 = QPushButton("Oproznij Z2", self)
         self.oproznijZ2.setGeometry(725, 120, 100, 30)
         self.oproznijZ2.setStyleSheet("background-color: #444; color: white;")
         self.oproznijZ2.clicked.connect(lambda: self.oproznij_zbiornik(self.z2))
 
+        # Przycisk napelniania zbiornika z3
         self.napelnijZ3 = QPushButton("Napelnij Z3", self)
         self.napelnijZ3.setGeometry(625, 155, 100, 30)
         self.napelnijZ3.setStyleSheet("background-color: #444; color: white;")
         self.napelnijZ3.clicked.connect(lambda: self.napelnij_zbiornik(self.z3))
 
+        # Przycisk oprozniania zbiornika z3
         self.oproznijZ3 = QPushButton("Oproznij Z3", self)
         self.oproznijZ3.setGeometry(725, 155, 100, 30)
         self.oproznijZ3.setStyleSheet("background-color: #444; color: white;")
         self.oproznijZ3.clicked.connect(lambda: self.oproznij_zbiornik(self.z3))
 
+        # Przycisk napelniania zbiornika z4
         self.napelnijZ4 = QPushButton("Napelnij Z4", self)
         self.napelnijZ4.setGeometry(625, 190, 100, 30)
         self.napelnijZ4.setStyleSheet("background-color: #444; color: white;")
         self.napelnijZ4.clicked.connect(lambda: self.napelnij_zbiornik(self.z4))
 
+        # Przycisk oprozniania zbiornika z4
         self.oproznijZ4 = QPushButton("Oproznij Z4", self)
         self.oproznijZ4.setGeometry(725, 190, 100, 30)
         self.oproznijZ4.setStyleSheet("background-color: #444; color: white;")
         self.oproznijZ4.clicked.connect(lambda: self.oproznij_zbiornik(self.z4))
 
+        # Przycisk resetowania symulacji do warunkow poczatkowych
         self.przycisk_reset = QPushButton("Reset", self)
         self.przycisk_reset.setGeometry(625, 260, 200, 30)
         self.przycisk_reset.setStyleSheet("background-color: red; color: #444;")
@@ -353,13 +366,13 @@ class SymulacjaKaskady(QWidget):
     def przelacz_symulacje(self):
         if self.running: 
             self.timer.stop()
-            self.btn.setStyleSheet("background-color: red; color: black;")
-            self.wykres.zatrzymaj_wykres()
+            self.btn.setStyleSheet("background-color: red; color: black;") # jesli symulacja jest zatrzymana to przycisk Start/Stop jest czerwony
+            self.wykres.zatrzymaj_wykres() # zatrzymanie drukowania wykresu
         else: 
             self.timer.start(20)
-            self.btn.setStyleSheet("background-color: green; color: white;")
+            self.btn.setStyleSheet("background-color: green; color: white;") # jesli symulacja jest uruchomiona to przycisk Start/Stop jest zielony
             self.wykres.pokaz_wykres()
-            self.wykres.wznow_wykres()
+            self.wykres.wznow_wykres() # wznownienie drukowania wykresu
         self.running = not self.running
 
     def logika_przeplywu(self):
@@ -386,7 +399,7 @@ class SymulacjaKaskady(QWidget):
         # 3. Przeplyw Z3 -> pompa -> Z4
         plynie_3_1 = False
         plynie_3_2 = False
-        if self.z3.aktualna_ilosc > 30.0 and not self.z4.czy_pelny():
+        if self.z3.aktualna_ilosc > 30.0 and not self.z4.czy_pelny(): # woda moze zostac wypompowana od poziomu 30 w zbiorniku
             if self.pompa.stan_pompy:
                 ilosc = self.z3.usun_ciecz(self.flow_speed)
                 self.z4.dodaj_ciecz(ilosc)
@@ -400,23 +413,24 @@ class SymulacjaKaskady(QWidget):
     def zmien_stan_zaworu(self):
         self.zawor.aktualizuj_stan_zaworu()
         if self.zawor.stan_zaworu:
-            self.stanZaworu.setStyleSheet("background-color: green; color: white;")
+            self.stanZaworu.setStyleSheet("background-color: green; color: white;") # jesli zawor wlaczony to oba przyciski sa zielone
             self.stanZaworu2.setStyleSheet("background-color: green; color: white;")
         else:
-            self.stanZaworu.setStyleSheet("background-color: red; color: black;")
+            self.stanZaworu.setStyleSheet("background-color: red; color: black;") # jesli wylaczony to czerwone
             self.stanZaworu2.setStyleSheet("background-color: red; color: black;")
         self.update()
 
     def zmien_stan_pompy(self):
         self.pompa.aktualizuj_stan_pompy()
         if self.pompa.stan_pompy:
-            self.stanPompy.setStyleSheet("background-color: green; color: white;")
-            self.stanPompy2.setStyleSheet("background-color: green; color: white;")        
+            self.stanPompy.setStyleSheet("background-color: green; color: white;") # jesli pompa wlaczona to oba przyciski sa zielone
+            self.stanPompy2.setStyleSheet("background-color: green; color: white;")
         else:
-            self.stanPompy.setStyleSheet("background-color: red; color: black;")
+            self.stanPompy.setStyleSheet("background-color: red; color: black;") # jesli wylaczona to czerwone
             self.stanPompy2.setStyleSheet("background-color: red; color: black;")
         self.update()
 
+    # Funkcje pozwalaja na aktualizacje obrazu przy zatrzymanej symulacji - w celu graficznej wizualizacji ktore zbiorniki sa napelnione
     def napelnij_zbiornik(self, zb):
         zb.napelnij()
         self.update()
@@ -425,12 +439,11 @@ class SymulacjaKaskady(QWidget):
         zb.oproznij()
         self.update()
 
+    # Funkcja resetuje wszystkie parametry do poczatkowych
     def reset(self):
-        if self.running: 
-            self.timer.stop()
-            self.btn.setStyleSheet("background-color: red; color: black;")
-            self.running = not self.running
-        self.napelnij_zbiornik(self.z1)
+        if self.running:
+            self.przelacz_symulacje()
+        self.napelnij_zbiornik(self.z1) # Pelny
         self.oproznij_zbiornik(self.z2)
         self.oproznij_zbiornik(self.z3)
         self.oproznij_zbiornik(self.z4)
@@ -464,7 +477,7 @@ class SymulacjaKaskady(QWidget):
 class OknoWykresu(QWidget):
     def __init__(self, zbiorniki):
         super().__init__()
-        self.MAX_POINTS = 100
+        self.MAX_POINTS = 100 # stala rozdzielczosc podzialki osi x
         self.setWindowTitle("Wykres poziomow")
         self.resize(500, 350)
         self.move(500, 0)
@@ -532,6 +545,7 @@ class OknoWykresu(QWidget):
             # czyścimy stare punkty (bufor)
             if s.count() > self.MAX_POINTS * 2:
                 s.removePoints(0, s.count() - self.MAX_POINTS * 2)
+        # przesunięcie osi x
         if s.count() > self.MAX_POINTS:
             self.axisX.setRange(
                 self.t - self.MAX_POINTS,
