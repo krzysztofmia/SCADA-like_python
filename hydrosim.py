@@ -510,16 +510,16 @@ class OknoWykresu(QWidget):
         self.chart.setBackgroundBrush(QBrush(QColor("#222")))
 
         # Oś X
-        self.axisX.setLinePenColor(Qt.white)       # linia osi
-        self.axisX.setLabelsBrush(Qt.white)        # etykiety osi (liczby)
-        self.axisX.setGridLineVisible(False)      # jeśli chcesz ukryć grid X
+        self.axisX.setLinePenColor(Qt.white)
+        self.axisX.setLabelsBrush(Qt.white)
+        self.axisX.setGridLineVisible(False)
 
         # Oś Y
-        self.axisY.setLinePenColor(Qt.white)       # linia osi
-        self.axisY.setLabelsBrush(Qt.white)        # etykiety osi
-        self.axisY.setGridLineVisible(False)      # jeśli chcesz ukryć grid Y
+        self.axisY.setLinePenColor(Qt.white)
+        self.axisY.setLabelsBrush(Qt.white)
+        self.axisY.setGridLineVisible(False)
 
-        # Legenda (opcjonalnie)
+        # Legenda
         self.chart.legend().setLabelColor(Qt.white)
 
 
